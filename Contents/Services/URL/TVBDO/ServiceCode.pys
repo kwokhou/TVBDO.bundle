@@ -1,0 +1,49 @@
+HTTP_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0',
+  'Referer': 'http://tvbdo.com/hong-kong-drama',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Encoding': 'gzip, deflate',
+  'Connection': 'keep-alive',
+  'HOST': 'tvbdo.com'
+}
+
+####################################################################################################
+def MetadataObjectForURL(url):
+  
+  html = HTML.ElementFromURL(url, headers=HTTP_HEADERS)
+
+  ep_title = html.xpath('//h1[@class="entry-title"]/text()')[0]
+  ep_thumb = html.xpath('//video/@poster')[0]
+  ep_url = html.xpath('//video/source/@src')[0]
+  
+  return MovieObject(
+    url = ep_url,
+    title = ep_title,
+    thumb = ep_thumb
+  )
+
+####################################################################################################
+def MediaObjectsForURL(url):
+  
+  return [
+    MediaObject(
+      parts = [PartObject(key=Callback(PlayVideo, url=url, bitrate='2528000'))],
+      video_resolution = '720',
+      bitrate = '2528',
+      container = Container.MP4,
+      video_codec = VideoCodec.H264,
+      audio_codec = AudioCodec.AAC,
+      audio_channels = 2,
+      optimized_for_streaming = True
+    )
+  ]
+
+####################################################################################################
+@indirect
+def PlayVideo(url, bitrate):
+
+  html = HTML.ElementFromURL(url, headers=HTTP_HEADERS)
+  ep_url = html.xpath('//video/source/@src')[0]
+  
+  return IndirectResponse(VideoClipObject, key=ep_url)
+
